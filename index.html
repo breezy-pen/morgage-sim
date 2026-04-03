@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>住宅ローン繰り上げ返済シミュレーター</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Noto Sans JP',sans-serif;background:linear-gradient(135deg,#fffbeb 0%,#fafaf9 50%,#fff7ed 100%);min-height:100vh;color:#292524}
+  .header{background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border-bottom:1px solid #e7e5e4;position:sticky;top:0;z-index:20;padding:10px 16px 0}
+  .header h1{font-size:17px;font-weight:900;letter-spacing:-0.5px}
+  .header-sub{font-size:11px;color:#a8a29e;margin-top:1px}
+  .tabs{display:flex;gap:0;margin-top:10px;border-bottom:2px solid #e7e5e4}
+  .tab{flex:1;padding:10px 0;text-align:center;font-size:13px;font-weight:700;border:none;background:none;cursor:pointer;color:#a8a29e;position:relative;transition:color 0.2s}
+  .tab.active{color:#b45309}
+  .tab.active::after{content:'';position:absolute;bottom:-2px;left:10%;right:10%;height:3px;background:#f59e0b;border-radius:2px}
+  .main{max-width:1200px;margin:0 auto;padding:16px 16px 40px}
+  #panel-input{max-width:960px;margin:0 auto}
+  #panel-result{max-width:1200px;margin:0 auto}
+  /* 2-col grid for input */
+  .input-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .section{background:#fff;border-radius:14px;border:1px solid #e7e5e4;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+  .section.mb{margin-bottom:12px}
+  .section-title{font-size:12px;font-weight:700;color:#44403c;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+  .section-num{width:22px;height:22px;background:#fef3c7;color:#b45309;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+  .field{margin-bottom:10px}
+  .field:last-child{margin-bottom:0}
+  .field label{display:block;font-size:11px;font-weight:500;color:#78716c;margin-bottom:3px}
+  .field-row{display:flex;align-items:center;gap:5px}
+  .field input[type="number"],.field input[type="date"]{padding:7px 8px;border:1px solid #d6d3d1;border-radius:8px;font-size:14px;text-align:right;font-family:inherit;outline:none;background:#fff;-moz-appearance:textfield}
+  .field input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
+  .field input:focus{border-color:transparent;box-shadow:0 0 0 2px #fbbf24}
+  .field input[type="date"]{text-align:left;font-size:13px}
+  .field .unit{font-size:12px;color:#78716c;flex-shrink:0}
+  .field .note{font-size:11px;color:#78716c;margin-top:2px}
+  .field select{width:100%;padding:7px 8px;border:1px solid #d6d3d1;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;outline:none}
+  .field select:focus{border-color:transparent;box-shadow:0 0 0 2px #fbbf24}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stepper{display:flex;align-items:center;border:1px solid #d6d3d1;border-radius:8px;overflow:hidden;width:fit-content}
+  .stepper button{width:34px;height:34px;border:none;background:#f5f5f4;font-size:16px;font-weight:700;cursor:pointer;color:#57534e}
+  .stepper button:hover{background:#e7e5e4}
+  .stepper .stepper-val{width:36px;text-align:center;font-size:14px;font-weight:700;color:#292524;background:#fff;border:none;border-left:1px solid #e7e5e4;border-right:1px solid #e7e5e4}
+  .checkbox-label{display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:8px}
+  .checkbox-label input{width:16px;height:16px;accent-color:#f59e0b}
+  .checkbox-label span{font-size:12px;color:#57534e}
+  .tax-box{background:#fffbeb;border-radius:8px;padding:8px 10px;margin-top:6px}
+  .tax-box .tax-label{font-size:10px;color:#78716c}
+  .tax-box .tax-value{font-size:16px;font-weight:900;color:#92400e}
+  .tax-box .tax-note{font-size:10px;color:#78716c;margin-top:2px}
+  .preset-info{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px;margin-top:6px;font-size:11px;color:#166534;line-height:1.5}
+  .btn-primary{width:100%;padding:14px;background:#f59e0b;color:#fff;font-weight:700;font-size:15px;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 12px rgba(245,158,11,0.3);font-family:inherit;margin-top:4px}
+  .btn-primary:hover{background:#d97706}
+  .btn-primary:active{transform:scale(0.98)}
+  .btn-secondary{width:100%;padding:10px;background:#f5f5f4;color:#78716c;font-weight:600;font-size:13px;border:none;border-radius:10px;cursor:pointer;font-family:inherit}
+  .btn-secondary:hover{background:#e7e5e4}
+  .privacy-badge{display:inline-flex;align-items:center;gap:4px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:5px 12px;font-size:11px;color:#065f46;margin-bottom:8px}
+  .privacy-wrap{text-align:center;margin-bottom:8px}
+  /* Collapsible for optional sections */
+  .opt-toggle{display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 12px;background:#f5f5f4;border:1px solid #e7e5e4;border-radius:10px;font-size:12px;font-weight:600;color:#78716c;margin-bottom:6px;width:100%}
+  .opt-toggle:hover{background:#e7e5e4}
+  .opt-body{display:none}
+  .opt-body.open{display:block}
+  /* Slider */
+  .slider-combo{margin-top:4px}
+  .slider-combo input[type="range"]{width:100%;height:8px;border-radius:4px;appearance:none;-webkit-appearance:none;background:#e7e5e4;outline:none;cursor:pointer}
+  .slider-combo input[type="range"]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#f59e0b;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);cursor:pointer}
+  .slider-range{display:flex;justify-content:space-between;font-size:10px;color:#78716c;margin-top:2px}
+  .slider-val-display{font-size:18px;font-weight:900;color:#b45309;text-align:center;margin-bottom:2px}
+  /* Result */
+  .verdict{border-radius:12px;padding:14px;text-align:center;margin-bottom:14px;font-size:15px;font-weight:500;line-height:1.7}
+  .verdict.good{background:#ecfdf5;border:2px solid #86efac;color:#065f46}
+  .verdict.warn{background:#fffbeb;border:2px solid #fde68a;color:#92400e}
+  .verdict b{font-weight:900;font-size:17px}
+  .verdict .big-amount{font-size:22px;font-weight:900;color:#059669}
+  .cmp-table-wrap{overflow-x:auto;margin-bottom:12px}
+  .cmp-table{width:100%;border-collapse:collapse;min-width:560px;font-variant-numeric:tabular-nums}
+  .cmp-table th,.cmp-table td{padding:10px 14px;text-align:right;font-size:15px;border-bottom:1px solid #e7e5e4;font-weight:600;white-space:nowrap}
+  .cmp-table th{font-weight:500;color:#78716c;font-size:12px;background:#fafaf9;position:sticky;left:0;z-index:1;text-align:left;min-width:110px}
+  .cmp-table thead th{font-weight:700;color:#44403c;text-align:center;background:#fff;border-bottom:2px solid #e7e5e4;font-size:14px}
+  .cmp-table thead th:first-child{text-align:left}
+  .cmp-table .col-none{background:#fafaf9}.cmp-table .col-shorten{background:#f0f9ff}.cmp-table .col-reduce{background:#ecfdf5}
+  .cmp-table .highlight-row td{font-weight:900;font-size:20px;border-top:2px solid #d6d3d1;border-bottom:2px solid #d6d3d1;padding:14px;background:#fffbeb}
+  .cmp-table .highlight-row th{font-weight:900;font-size:13px;border-top:2px solid #d6d3d1;border-bottom:2px solid #d6d3d1;padding:14px;background:#fffbeb}
+  .cmp-table .diff{font-size:12px;display:block;margin-top:4px;font-weight:700;text-align:right}
+  .cmp-table .diff.save{color:#059669;background:#ecfdf5;display:inline-block;padding:2px 8px;border-radius:6px}
+  .cmp-table .diff.loss{color:#dc2626;background:#fef2f2;display:inline-block;padding:2px 8px;border-radius:6px}
+  .cmp-table .best-badge{display:inline-block;font-size:10px;background:#fef3c7;color:#b45309;padding:2px 8px;border-radius:99px;margin-left:4px}
+  .chart-box{background:#fff;border-radius:12px;border:1px solid #e7e5e4;padding:16px;margin-top:12px;overflow-x:auto;position:relative}
+  .chart-box h3{font-size:13px;font-weight:700;color:#57534e;margin-bottom:10px}
+  .chart-tooltip{position:absolute;background:#1c1917;color:#fff;padding:8px 12px;border-radius:8px;font-size:11px;pointer-events:none;z-index:5;line-height:1.6;white-space:nowrap;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .quick-adjust{background:#fff;border-radius:12px;border:1px solid #e7e5e4;padding:14px;margin-bottom:12px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+  .quick-adjust .qa-item{flex:1;min-width:180px}
+  .quick-adjust label{font-size:11px;font-weight:600;color:#78716c;display:block;margin-bottom:3px}
+  .quick-adjust .qa-val{font-size:18px;font-weight:900;color:#b45309;margin-bottom:3px}
+  .invest-section{background:#fff;border-radius:12px;border:1px solid #e7e5e4;padding:18px;margin-top:14px}
+  .invest-section h3{font-size:14px;font-weight:700;color:#44403c;margin-bottom:3px}
+  .invest-section .invest-sub{font-size:12px;color:#78716c;margin-bottom:14px}
+  .invest-result{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .invest-card{background:#fafaf9;border-radius:10px;padding:14px 18px;border:1px solid #e7e5e4;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .invest-card.highlight{background:#ecfdf5;border-color:#86efac}
+  .invest-card .ic-label{font-size:13px;color:#57534e;font-weight:600;text-align:left}
+  .invest-card .ic-val{font-size:20px;font-weight:900;text-align:right;white-space:nowrap}
+  .invest-card .ic-val.green{color:#059669}.invest-card .ic-val.red{color:#dc2626}
+  .invest-bep{text-align:center;margin-top:14px;padding:12px;background:#fffbeb;border-radius:10px;border:1px solid #fde68a;font-size:14px;font-weight:700;color:#92400e}
+  .invest-note{font-size:11px;color:#78716c;margin-top:10px;line-height:1.6;padding:10px;background:#f5f5f4;border-radius:8px}
+  .accordion{margin-top:14px}
+  .accordion-btn{width:100%;padding:10px 14px;background:#f5f5f4;border:1px solid #e7e5e4;border-radius:10px;font-size:12px;font-weight:600;color:#78716c;cursor:pointer;font-family:inherit;display:flex;justify-content:space-between;align-items:center}
+  .accordion-btn:hover{background:#e7e5e4}
+  .accordion-body{display:none;margin-top:8px}.accordion-body.open{display:block}
+  .ded-table{width:100%;font-size:11px;border-collapse:collapse}
+  .ded-table th{text-align:left;padding:5px 4px;color:#78716c;font-weight:500;border-bottom:1px solid #e7e5e4}.ded-table th.r{text-align:right}
+  .ded-table td{padding:5px 4px;color:#44403c;border-bottom:1px solid #f5f5f4}.ded-table td.r{text-align:right}.ded-table td.hl{font-weight:700;color:#b45309}
+  .ded-table tfoot td{border-top:2px solid #d6d3d1;font-weight:900;padding-top:6px}
+  .detail-section{background:#fff;border-radius:10px;border:1px solid #e7e5e4;padding:12px;margin-bottom:8px}
+  .detail-section h3{font-size:12px;font-weight:700;color:#44403c;margin-bottom:6px}
+  .footer{background:#f5f5f4;border-radius:12px;padding:14px;margin-top:28px}
+  .footer p{font-size:11px;color:#78716c;line-height:1.7}.footer .copy{margin-top:6px;color:#a8a29e}
+  .hidden{display:none}
+  @media(max-width:700px){.input-grid{grid-template-columns:1fr}.invest-result{grid-template-columns:1fr!important}.invest-card{flex-direction:column;text-align:center;gap:6px}.quick-adjust{flex-direction:column;gap:10px}}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🏠 住宅ローン繰り上げ返済シミュレーター</h1>
+  <p class="header-sub">控除込み・実質負担額で比較</p>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('input')" id="tab-input">条件入力</button>
+    <button class="tab" onclick="switchTab('result')" id="tab-result">比較結果</button>
+  </div>
+</div>
+<div class="main">
+  <div class="privacy-wrap"><span class="privacy-badge">🔒 入力データは端末内のみで処理。外部送信・保存は一切されません</span></div>
+  <!-- ===== INPUT ===== -->
+  <div id="panel-input">
+    <div class="input-grid">
+      <!-- Col1 Row1: ローン基本 -->
+      <div class="section">
+        <div class="section-title"><span class="section-num">1</span>ローン基本条件</div>
+        <div class="field"><label>現在の借入残高</label><div class="field-row"><input type="number" id="balance" value="3000" step="1" min="0" style="width:120px" oninput="updBalDisp()"><span class="unit">万円</span></div><div class="note" id="bal-disp">＝30,000,000円</div></div>
+        <div class="grid-2">
+          <div class="field"><label>金利（年利）</label><div class="field-row"><input type="number" id="rate" value="1.0" step="0.025" min="0.1" max="10" style="width:80px"><span class="unit">%</span></div></div>
+          <div class="field"><label>残りの返済回数</label><div class="field-row"><input type="number" id="remainMonths" value="420" step="1" min="1" max="420" style="width:80px" oninput="updRemDisp()"><span class="unit">回</span></div><div class="note" id="rem-disp"></div></div>
+        </div>
+      </div>
+      <!-- Col2 Row1: 繰上返済 -->
+      <div class="section">
+        <div class="section-title"><span class="section-num">2</span>繰り上げ返済</div>
+        <div class="field"><label>繰り上げ返済額</label>
+          <div class="slider-val-display" id="pp-disp">100万円</div>
+          <div class="slider-combo"><input type="range" id="ppSlider" min="0" max="500" step="10" value="100" oninput="syncPP(this.value)"><div class="slider-range"><span>0万円</span><span>500万円</span></div></div>
+          <div class="field-row" style="margin-top:6px"><span style="font-size:10px;color:#a8a29e">直接入力：</span><input type="number" id="prepayAmount" value="100" step="10" min="0" max="5000" style="width:80px" oninput="syncPPinp(this.value)"><span class="unit">万円</span></div>
+        </div>
+        <div class="field"><label>何ヶ月後に実行？</label><div class="field-row"><input type="number" id="prepayTiming" value="1" step="1" min="1" max="120" style="width:70px"><span class="unit">ヶ月後</span></div></div>
+      </div>
+      <!-- Col1 Row2: 控除 -->
+      <div class="section">
+        <div class="section-title"><span class="section-num">3</span>住宅ローン控除</div>
+        <div class="field"><label>入居年・住宅タイプ</label>
+          <select id="preset" onchange="applyPreset()">
+            <option value="">-- 選んでください --</option>
+            <option value="no_deduction">控除なし（控除期間終了 or 対象外）</option>
+            <optgroup label="〜2021年入居（旧制度：控除率1%）"><option value="old_general">一般住宅（1%・10年・上限40万）</option><option value="old_nintei">認定住宅（1%・10年・上限50万）</option><option value="old_10tax_13">消費税10%特例13年（1%・13年・上限40万）</option></optgroup>
+            <optgroup label="2022〜2023年入居（控除率0.7%）"><option value="2223_nintei">認定長期優良・低炭素（限度額5,000万）</option><option value="2223_zeh">ZEH水準省エネ（限度額4,500万）</option><option value="2223_shoene">省エネ基準適合（限度額4,000万）</option><option value="2223_other">その他の住宅（限度額3,000万）</option></optgroup>
+            <optgroup label="2024〜2025年入居（控除率0.7%）"><option value="2425_nintei">認定長期優良・低炭素（限度額4,500万）</option><option value="2425_zeh">ZEH水準省エネ（限度額3,500万）</option><option value="2425_shoene">省エネ基準適合（限度額3,000万）</option><option value="2425_other">その他の住宅（限度額2,000万）</option></optgroup>
+            <optgroup label="経過措置"><option value="keika_1_07">旧契約→2022年入居（1%×10年＋0.7%×3年）</option></optgroup>
+            <option value="custom">手動で設定する</option>
+          </select>
+        </div>
+        <div id="preset-info-box"></div>
+        <div id="custom-ded" class="hidden" style="margin-top:8px">
+          <div class="grid-2"><div class="field"><label>控除率</label><div class="field-row"><input type="number" id="dedRate1" value="0.7" step="0.1" min="0" max="1" style="width:60px"><span class="unit">%</span></div></div><div class="field"><label>控除期間</label><div class="field-row"><input type="number" id="dedYears1" value="13" step="1" min="0" max="15" style="width:60px"><span class="unit">年</span></div></div></div>
+          <div class="grid-2"><div class="field"><label>後半控除率</label><div class="field-row"><input type="number" id="dedRate2" value="0" step="0.1" min="0" max="1" style="width:60px"><span class="unit">%</span></div></div><div class="field"><label>後半年数</label><div class="field-row"><input type="number" id="dedYears2" value="0" step="1" min="0" max="5" style="width:60px"><span class="unit">年</span></div></div></div>
+          <div class="field"><label>年間控除上限額</label><div class="field-row"><input type="number" id="dedCap" value="21" step="0.5" min="0" style="width:70px"><span class="unit">万円</span></div></div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>居住開始年月</label><div class="field-row">
+          <select id="moveInYear" style="width:90px;padding:7px 8px;border:1px solid #d6d3d1;border-radius:8px;font-size:13px" onchange="calcDedRem()">
+            <option value="">年</option>
+            <option value="2015">2015年</option><option value="2016">2016年</option><option value="2017">2017年</option><option value="2018">2018年</option><option value="2019">2019年</option><option value="2020">2020年</option><option value="2021">2021年</option><option value="2022">2022年</option><option value="2023">2023年</option><option value="2024">2024年</option><option value="2025">2025年</option><option value="2026">2026年</option>
+          </select>
+          <select id="moveInMonth" style="width:70px;padding:7px 8px;border:1px solid #d6d3d1;border-radius:8px;font-size:13px" onchange="calcDedRem()">
+            <option value="">月</option>
+            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+          </select>
+        </div></div>
+        <div class="field"><label>控除の残り年数</label><div class="field-row"><input type="number" id="dedRemaining" value="0" step="1" min="0" max="15" style="width:60px"><span class="unit">年</span></div><div class="note" id="ded-rem-note"></div></div>
+      </div>
+      <!-- Col2 Row2: 年収 -->
+      <div class="section">
+        <div class="section-title"><span class="section-num">4</span>年収・税金（概算用）</div>
+        <div class="grid-2">
+          <div class="field"><label>額面年収</label><div class="field-row"><input type="number" id="grossIncome" value="" step="10" min="0" style="width:90px" oninput="updTax()"><span class="unit">万円</span></div><div class="note">源泉徴収票「支払金額」</div></div>
+          <div class="field"><label>社会保険料</label><div class="field-row"><input type="number" id="socialIns" value="" step="1" min="0" style="width:80px" oninput="updTax()"><span class="unit">万円</span></div></div>
+        </div>
+        <div class="field"><label>扶養人数（16歳以上）</label><div class="stepper"><button type="button" onclick="stepV('dep',-1)">−</button><input type="text" id="dep" value="0" class="stepper-val" readonly><button type="button" onclick="stepV('dep',1)">+</button></div></div>
+        <div class="tax-box"><div class="tax-label">概算所得税額（復興税込）</div><div class="tax-value" id="est-tax">—</div><div class="tax-note">※ 生命保険料控除等は含まない概算</div></div>
+      </div>
+    </div>
+    <!-- Optional sections as collapsible -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <button class="opt-toggle" onclick="togOpt('opt-rc')">▶ 金利変動シナリオ（任意）</button>
+        <div id="opt-rc" class="opt-body">
+          <div class="section">
+            <label class="checkbox-label"><input type="checkbox" id="useRC"><span>将来の金利変動を想定する</span></label>
+            <div id="rc-fields" class="hidden"><div class="grid-2"><div class="field"><label>何年後に変動？</label><div class="field-row"><input type="number" id="rcYear" value="3" step="1" min="1" max="15" style="width:60px"><span class="unit">年後</span></div></div><div class="field"><label>変動後の金利</label><div class="field-row"><input type="number" id="rcRate" value="1.5" step="0.001" min="0.1" max="5" style="width:70px"><span class="unit">%</span></div></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <button class="opt-toggle" onclick="togOpt('opt-bonus')">▶ ボーナス返済（任意）</button>
+        <div id="opt-bonus" class="opt-body">
+          <div class="section">
+            <div class="field"><label>ボーナス返済分の残高</label><div class="field-row"><input type="number" id="bonusBal" value="0" step="10" min="0" style="width:120px"><span class="unit">万円</span></div><div class="note">ボーナス返済なしなら0のまま</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="runAndShow()">シミュレーション結果を見る →</button>
+  </div>
+
+  <!-- ===== RESULT ===== -->
+  <div id="panel-result" class="hidden">
+    <div class="quick-adjust">
+      <div class="qa-item">
+        <label>繰り上げ返済額</label>
+        <div class="qa-val" id="qa-pp-disp">100万円</div>
+        <div class="slider-combo"><input type="range" id="qaSlider" min="0" max="500" step="10" value="100" oninput="qaChange(this.value)"><div class="slider-range"><span>0</span><span>500万円</span></div></div>
+      </div>
+      <div class="qa-item" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <label class="checkbox-label" style="margin-bottom:3px;font-size:14px"><input type="checkbox" id="qaRC" onchange="qaRCToggle()"><span style="font-size:14px">金利変動を想定</span></label>
+        <div id="qa-rc-fields" style="display:none;gap:10px;align-items:center">
+          <input type="text" inputmode="numeric" id="qaRCYear" value="3" style="width:52px;padding:8px;border:1px solid #d6d3d1;border-radius:8px;font-size:16px;text-align:right" oninput="qaRCChange()"><span style="font-size:15px;color:#57534e">年後</span>
+          <input type="text" inputmode="decimal" id="qaRCRate" value="1.5" style="width:76px;padding:8px;border:1px solid #d6d3d1;border-radius:8px;font-size:16px;text-align:right" oninput="qaRCChange()"><span style="font-size:15px;color:#57534e">%</span>
+        </div>
+      </div>
+    </div>
+    <div class="section mb">
+      <div id="r-verdict"></div>
+      <div class="cmp-table-wrap"><table class="cmp-table" id="cmp-table"></table></div>
+    </div>
+    <div class="chart-box" id="chart-box">
+      <h3>残高推移 <span style="font-size:11px;font-weight:400;color:#a8a29e">（カーソルを合わせると金額表示）</span></h3>
+      <svg id="chart" viewBox="0 0 800 250" style="width:100%;min-width:320px"></svg>
+      <div class="chart-tooltip" id="tooltip"></div>
+    </div>
+    <div class="invest-section">
+      <h3>💰 もし繰り上げ返済せず運用したら？</h3>
+      <div class="invest-sub">繰り上げ返済に使う予定のお金を、代わりに運用した場合のシミュレーション</div>
+      <div class="field"><label>想定運用利率（年利）</label>
+        <div style="display:flex;align-items:center;gap:12px"><div class="slider-combo" style="flex:1"><input type="range" id="investRate" min="0.1" max="5.0" step="0.1" value="0.8" oninput="updInvest()"></div><div style="font-size:20px;font-weight:900;color:#b45309;min-width:60px;text-align:right" id="inv-rate-disp">0.8%</div></div>
+        <div class="slider-range"><span>0.1%</span><span>5.0%</span></div>
+      </div>
+      <div class="invest-result" id="inv-result"></div>
+      <div class="invest-bep" id="inv-bep"></div>
+      <div class="invest-note">⚠️ 本シミュレーションは特定の金融商品や運用方法を推奨するものではありません。運用にはリスクが伴います。運用利益に対する税金は考慮していません（実際には利息・配当に対して課税されます）。あくまで参考としてご利用ください。</div>
+    </div>
+    <div class="accordion"><button class="accordion-btn" onclick="toggleAcc(this)">控除明細を見る <span>▼</span></button><div class="accordion-body" id="det-body"></div></div>
+    <button class="btn-secondary" onclick="switchTab('input')" style="margin-top:14px">← 条件を変更する</button>
+  </div>
+  <div class="footer">
+    <p>🔒 本シミュレーターはブラウザ内でのみ動作し、入力データの外部送信・保存は一切行いません。</p>
+    <p style="margin-top:4px">⚠️ 一般的な条件に基づく概算です。控除は簡易モデル（住民税含む）、ボーナス返済は元利均等近似、金利変動は単純モデルです。最終判断は金融機関・税理士等にご確認ください。</p>
+    <p class="copy">© そよ風ペンギン ｜ 税制データ出典：国土交通省・国税庁</p>
+  </div>
+</div>
+<script>
+// ===== Presets (with residential tax cap: old=136500, new=97500) =====
+const PRESETS={
+  no_deduction:{r1:0,y1:0,r2:0,y2:0,cap:0,ty:0,rtc:0,note:'住宅ローン控除なし'},
+  old_general:{r1:1,y1:10,r2:0,y2:0,cap:40,ty:10,rtc:136500,note:'控除率1%・借入限度額4,000万円・期間10年'},
+  old_nintei:{r1:1,y1:10,r2:0,y2:0,cap:50,ty:10,rtc:136500,note:'控除率1%・借入限度額5,000万円・期間10年'},
+  old_10tax_13:{r1:1,y1:13,r2:0,y2:0,cap:40,ty:13,rtc:136500,note:'控除率1%・借入限度額4,000万円・期間13年'},
+  '2223_nintei':{r1:.7,y1:13,r2:0,y2:0,cap:35,ty:13,rtc:97500,note:'控除率0.7%・借入限度額5,000万円・期間13年'},
+  '2223_zeh':{r1:.7,y1:13,r2:0,y2:0,cap:31.5,ty:13,rtc:97500,note:'控除率0.7%・借入限度額4,500万円・期間13年'},
+  '2223_shoene':{r1:.7,y1:13,r2:0,y2:0,cap:28,ty:13,rtc:97500,note:'控除率0.7%・借入限度額4,000万円・期間13年'},
+  '2223_other':{r1:.7,y1:13,r2:0,y2:0,cap:21,ty:13,rtc:97500,note:'控除率0.7%・借入限度額3,000万円・期間13年'},
+  '2425_nintei':{r1:.7,y1:13,r2:0,y2:0,cap:31.5,ty:13,rtc:97500,note:'控除率0.7%・借入限度額4,500万円・期間13年'},
+  '2425_zeh':{r1:.7,y1:13,r2:0,y2:0,cap:24.5,ty:13,rtc:97500,note:'控除率0.7%・借入限度額3,500万円・期間13年'},
+  '2425_shoene':{r1:.7,y1:13,r2:0,y2:0,cap:21,ty:13,rtc:97500,note:'控除率0.7%・借入限度額3,000万円・期間13年'},
+  '2425_other':{r1:.7,y1:10,r2:0,y2:0,cap:14,ty:10,rtc:97500,note:'控除率0.7%・借入限度額2,000万円・期間10年'},
+  keika_1_07:{r1:1,y1:10,r2:.7,y2:3,cap:40,ty:13,rtc:136500,note:'前半10年:1%（旧）・後半3年:0.7%（新）'}
+};
+function applyPreset(){const s=gid('preset').value,box=gid('preset-info-box'),cu=gid('custom-ded');if(s==='custom'){cu.classList.remove('hidden');box.innerHTML='';return}if(!s||!PRESETS[s]){box.innerHTML='';cu.classList.add('hidden');return}const p=PRESETS[s];gid('dedRate1').value=p.r1;gid('dedYears1').value=p.y1;gid('dedRate2').value=p.r2;gid('dedYears2').value=p.y2;gid('dedCap').value=p.cap;cu.classList.add('hidden');box.innerHTML='<div class="preset-info">✅ '+p.note+'</div>';if(s==='no_deduction'){gid('dedRemaining').value=0;gid('ded-rem-note').textContent='控除なし'}else{calcDedRem()}}
+
+function gid(id){return document.getElementById(id)}
+function nv(id){return Number(gid(id).value)}
+function fy(n){return n==null||isNaN(n)?'—':Math.round(n).toLocaleString('ja-JP')+'円'}
+function fym(n){return(n/1e4).toFixed(1)+'万円'}
+function updBalDisp(){gid('bal-disp').textContent='＝'+(nv('balance')*1e4).toLocaleString('ja-JP')+'円'}
+function updRemDisp(){const m=nv('remainMonths');gid('rem-disp').textContent='（'+Math.floor(m/12)+'年'+m%12+'ヶ月）'}
+function syncPP(v){gid('prepayAmount').value=v;gid('pp-disp').textContent=v+'万円'}
+function syncPPinp(v){gid('ppSlider').value=Math.min(500,v);gid('pp-disp').textContent=v+'万円'}
+function calcDedRem(){const yr=gid('moveInYear').value,mn=gid('moveInMonth').value;if(!yr)return;const s=gid('preset').value;const ty=PRESETS[s]?PRESETS[s].ty:(nv('dedYears1')+nv('dedYears2'));const miY=parseInt(yr),miM=parseInt(mn)||1;const now=new Date();const used=now.getFullYear()-miY-(now.getMonth()+1<miM?1:0);const rem=Math.max(0,ty-used);gid('dedRemaining').value=rem;gid('ded-rem-note').textContent='入居から約'+used+'年経過 → 残り'+rem+'年'}
+function stepV(id,d){const e=gid(id);e.value=Math.max(0,Math.min(10,(parseInt(e.value)||0)+d));updTax()}
+function switchTab(n){['input','result'].forEach(t=>{gid('panel-'+t).classList.toggle('hidden',t!==n);gid('tab-'+t).classList.toggle('active',t===n)});window.scrollTo({top:0,behavior:'smooth'})}
+function runAndShow(){runSim();switchTab('result')}
+function togOpt(id){gid(id).classList.toggle('open')}
+gid('useRC').addEventListener('change',function(){gid('rc-fields').classList.toggle('hidden',!this.checked)});
+function toggleAcc(b){const bd=b.nextElementSibling;bd.classList.toggle('open');b.querySelector('span').textContent=bd.classList.contains('open')?'▲':'▼'}
+let qaEditing=false;
+function qaChange(v){gid('prepayAmount').value=v;gid('ppSlider').value=v;gid('pp-disp').textContent=v+'万円';gid('qa-pp-disp').textContent=v+'万円';runSim()}
+function qaRCToggle(){const c=gid('qaRC').checked;gid('qa-rc-fields').style.display=c?'flex':'none';gid('useRC').checked=c;gid('rc-fields').classList.toggle('hidden',!c);if(c){gid('rcYear').value=gid('qaRCYear').value;gid('rcRate').value=gid('qaRCRate').value}runSim()}
+function qaRCChange(){qaEditing=true;gid('rcYear').value=gid('qaRCYear').value;gid('rcRate').value=gid('qaRCRate').value;runSim();qaEditing=false}
+
+// ===== Calculation =====
+function calcMP(p,r,m){if(r===0)return p/m;const mr=r/100/12;return p*mr*Math.pow(1+mr,m)/(Math.pow(1+mr,m)-1)}
+
+// Get residential tax cap from preset
+function getResidentTaxCap(){const s=gid('preset').value;if(PRESETS[s])return PRESETS[s].rtc;return 97500;}
+
+function sim(p){let b=p.b,mo=p.mo;const omp=calcMP(p.b,p.r,p.mo);let mp=omp,cr=p.r;let tI=0,tP=0,tD=0,am=0;const deds=[],md=[];let done=false;const tdy=p.dy1+p.dy2,dyu=tdy-p.drem;
+for(let m=1;m<=mo&&b>0;m++){if(p.rc)for(const c of p.rc)if(m===c.am){cr=c.nr;mp=calcMP(b,cr,mo-m+1)}
+const r=cr/100/12,interest=b*r;let princ=mp-interest;if(princ>b)princ=b;b-=princ;tI+=interest;tP+=princ+interest;am=m;
+if(!done&&p.pt!=='none'&&m===p.pm&&p.pa>0){const a=Math.min(p.pa,b);b-=a;tP+=a;done=true;if(p.pt==='shorten'){if(b>0&&r>0)mo=m+Math.ceil(-Math.log(1-(b*r)/mp)/Math.log(1+r));else mo=m}else if(p.pt==='reduce'){const rem=mo-m;if(rem>0&&b>0)mp=calcMP(b,cr,rem)}}
+if(m%12===0||b<=0){const yi=Math.ceil(m/12)-1,yb=Math.max(0,b),cdy=dyu+yi+1;if(cdy<=tdy&&yb>0){let rate=cdy<=p.dy1?p.dr1:(p.dr2>0?p.dr2:p.dr1);let d=Math.floor(yb*rate/100);if(p.cap>0)d=Math.min(d,p.cap);
+// Fix③: use residential tax cap from preset
+d=Math.min(d,p.tax+p.rtc);
+deds.push({y:cdy,b:yb,d,rate});tD+=d}}
+md.push({m,b:Math.max(0,b)});if(b<=0)break}return{tP,tI,tD,net:tP-tD,am,mp:omp,nmp:mp,deds,md}}
+
+function estimateTax(g,s,d){let dd;if(g<=1625e3)dd=55e4;else if(g<=18e5)dd=g*.4-1e5;else if(g<=36e5)dd=g*.3+8e4;else if(g<=66e5)dd=g*.2+44e4;else if(g<=85e5)dd=g*.1+11e5;else dd=195e4;const ti=Math.max(0,Math.floor((g-dd-s-48e4-d*38e4)/1e3)*1e3);let t;if(ti<=195e4)t=ti*.05;else if(ti<=33e5)t=ti*.1-97500;else if(ti<=695e4)t=ti*.2-4275e2;else if(ti<=9e6)t=ti*.23-636e3;else if(ti<=18e6)t=ti*.33-1536e3;else if(ti<=4e7)t=ti*.4-2796e3;else t=ti*.45-4796e3;return Math.max(0,Math.floor(t*1.021))}
+function updTax(){gid('est-tax').textContent=fy(estimateTax(nv('grossIncome')*1e4,nv('socialIns')*1e4,parseInt(gid('dep').value)||0))}
+
+let lastR={};
+function runSim(){
+  const b=nv('balance')*1e4,r=nv('rate'),mo=nv('remainMonths'),pa=nv('prepayAmount')*1e4,pm=nv('prepayTiming');
+  const dr1=nv('dedRate1'),dy1=nv('dedYears1'),dr2=nv('dedRate2'),dy2=nv('dedYears2'),cap=nv('dedCap')*1e4,drem=nv('dedRemaining');
+  const tax=estimateTax(nv('grossIncome')*1e4,nv('socialIns')*1e4,parseInt(gid('dep').value)||0);
+  const rtc=getResidentTaxCap();
+  const useRC=gid('useRC').checked;const rc=useRC?[{am:nv('rcYear')*12,nr:nv('rcRate')}]:null;
+  const bb=nv('bonusBal')*1e4;
+  const c={b:b-bb,r,mo,dr1,dy1,dr2,dy2,cap,drem,tax,rtc,rc};
+  const none=sim({...c,pa:0,pt:'none',pm:1});
+  const sh=sim({...c,pa,pt:'shorten',pm});
+  const rd=sim({...c,pa,pt:'reduce',pm});
+
+  // Fix①: Bonus interest as amortized (not simple interest)
+  if(bb>0){
+    let bi=0;
+    if(r>0){const bmp=calcMP(bb,r,mo);bi=(bmp*mo)-bb}
+    [none,sh,rd].forEach(x=>{x.tP+=bb+bi;x.tI+=bi;x.net=x.tP-x.tD});
+  }
+
+  let best='none';if(sh.net<=rd.net&&sh.net<none.net)best='shorten';else if(rd.net<=sh.net&&rd.net<none.net)best='reduce';
+  lastR={none,sh,rd,best,pa,pm,rc,mo};
+
+  gid('qa-pp-disp').textContent=nv('prepayAmount')+'万円';gid('qaSlider').value=Math.min(500,nv('prepayAmount'));
+  gid('qaRC').checked=useRC;gid('qa-rc-fields').style.display=useRC?'flex':'none';
+  if(useRC&&!qaEditing){gid('qaRCYear').value=nv('rcYear');gid('qaRCRate').value=nv('rcRate')}
+
+  const vd=gid('r-verdict');
+  if(best!=='none'){const lbl=best==='shorten'?'期間短縮型':'返済額軽減型';const sv=Math.abs((best==='shorten'?sh:rd).net-none.net);vd.className='verdict good';vd.innerHTML='💡 この条件では<b>'+lbl+'</b>が実質負担で<br><span class="big-amount">'+fy(sv)+'お得</span>'}else{vd.className='verdict warn';vd.innerHTML='⚠️ この条件では<b>繰り上げ返済しない方</b>が<br>実質負担が少なくなります（控除の恩恵が大きい）'}
+
+  const dn=none,ds=sh,dr=rd;
+  const dI_s=ds.tI-dn.tI,dI_r=dr.tI-dn.tI,dD_s=ds.tD-dn.tD,dD_r=dr.tD-dn.tD,dN_s=ds.net-dn.net,dN_r=dr.net-dn.net,dM_s=ds.am-dn.am,dM_r=dr.am-dn.am;
+  function ds_(v,lo){if(!v)return'';const g=lo?v<0:v>0;return'<span class="diff '+(g?'save':'loss')+'">'+(lo?(v<0?'削減 ':'増加 '):(v>0?'増加 ':'減少 '))+fy(Math.abs(v))+'</span>'}
+  function dm_(v){if(!v)return'';return'<span class="diff '+(v<0?'save':'loss')+'">'+(v<0?Math.abs(v)+'ヶ月短縮':v+'ヶ月延長')+'</span>'}
+  function fm_(m){return Math.floor(m/12)+'年'+m%12+'ヶ月'}
+  const bs='',br_='';
+  gid('cmp-table').innerHTML=`<thead><tr><th></th><th class="col-none">繰上なし</th><th class="col-shorten">期間短縮型${bs}</th><th class="col-reduce">返済軽減型${br_}</th></tr></thead><tbody>
+  <tr><th>総返済額</th><td class="col-none">${fy(dn.tP)}</td><td class="col-shorten">${fy(ds.tP)}</td><td class="col-reduce">${fy(dr.tP)}</td></tr>
+  <tr><th>うち利息</th><td class="col-none">${fy(dn.tI)}</td><td class="col-shorten">${fy(ds.tI)}${ds_(dI_s,true)}</td><td class="col-reduce">${fy(dr.tI)}${ds_(dI_r,true)}</td></tr>
+  <tr><th>控除合計</th><td class="col-none">${fy(dn.tD)}</td><td class="col-shorten">${fy(ds.tD)}${ds_(dD_s,false)}</td><td class="col-reduce">${fy(dr.tD)}${ds_(dD_r,false)}</td></tr>
+  <tr class="highlight-row"><th>実質負担額</th><td class="col-none">${fy(dn.net)}</td><td class="col-shorten">${fy(ds.net)}${ds_(dN_s,true)}</td><td class="col-reduce">${fy(dr.net)}${ds_(dN_r,true)}</td></tr>
+  <tr><th>返済期間</th><td class="col-none">${fm_(dn.am)}</td><td class="col-shorten">${fm_(ds.am)}${dm_(dM_s)}</td><td class="col-reduce">${fm_(dr.am)}${dm_(dM_r)}</td></tr>
+  <tr><th>最終的な<br>毎月返済額</th><td class="col-none">${fy(dn.nmp)}${dn.nmp!==dn.mp?'<br><span style="font-size:10px;color:#78716c">(当初 '+fy(dn.mp)+')</span>':''}</td><td class="col-shorten">${fy(ds.nmp)}${ds.nmp!==dn.nmp?ds_(ds.nmp-dn.nmp,true):''}</td><td class="col-reduce">${fy(dr.nmp)}${dr.nmp!==dn.nmp?ds_(dr.nmp-dn.nmp,true):''}</td></tr></tbody>`;
+  renderChart(none,sh,rd);
+  gid('det-body').innerHTML=dedSec('繰り上げなし',none.deds)+dedSec('期間短縮型',sh.deds)+dedSec('返済額軽減型',rd.deds);
+  updInvest();
+}
+
+let chartData={};
+function renderChart(n,s,r){
+  const W=800,H=250,PL=70,PR=20,PT=20,PB=40,cW=W-PL-PR,cH=H-PT-PB;
+  const all=[n,s,r],maxM=Math.max(...all.map(x=>x.md.length)),maxB=Math.max(...all.flatMap(x=>x.md.map(d=>d.b)));
+  chartData={W,H,PL,PR,PT,PB,cW,cH,maxM,maxB,n,s,r};
+  const x=m=>PL+(m/maxM)*cW,y=b=>PT+(1-b/maxB)*cH;
+  function path(d,c){const pts=d.md.filter((_,i)=>i%3===0||i===d.md.length-1);return'<path d="'+pts.map((p,i)=>(i===0?'M':'L')+x(p.m).toFixed(1)+','+y(p.b).toFixed(1)).join(' ')+'" fill="none" stroke="'+c+'" stroke-width="2.5" stroke-linecap="round"/>'}
+  let svg='';const yS=Math.ceil(maxB/4/1e6)*1e6;
+  for(let v=0;v<=maxB;v+=yS)svg+='<line x1="'+PL+'" x2="'+(W-PR)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="#e7e5e4"/><text x="'+(PL-8)+'" y="'+(y(v)+4)+'" text-anchor="end" fill="#a8a29e" font-size="10">'+(v/1e4).toFixed(0)+'万</text>';
+  const xS=Math.max(1,Math.floor(maxM/12/5))*12;
+  for(let m=0;m<=maxM;m+=xS)svg+='<text x="'+x(m)+'" y="'+(H-10)+'" text-anchor="middle" fill="#a8a29e" font-size="10">'+Math.round(m/12)+'年</text>';
+  svg+=path(n,'#78716c')+path(s,'#0284c7')+path(r,'#059669');
+  svg+='<line id="hover-line" x1="0" x2="0" y1="'+PT+'" y2="'+(H-PB)+'" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4" display="none"/>';
+  svg+='<rect x="'+PL+'" y="'+PT+'" width="'+cW+'" height="'+cH+'" fill="transparent" style="cursor:crosshair"/>';
+  [['繰上なし','#78716c'],['期間短縮','#0284c7'],['返済軽減','#059669']].forEach((l,i)=>{const tx=PL+i*120;svg+='<rect x="'+tx+'" y="'+(H-30)+'" width="14" height="3" fill="'+l[1]+'" rx="1.5"/><text x="'+(tx+18)+'" y="'+(H-26)+'" fill="'+l[1]+'" font-size="10" font-weight="600">'+l[0]+'</text>'});
+  gid('chart').innerHTML=svg;
+}
+gid('chart').addEventListener('mousemove',function(e){
+  if(!chartData.maxM)return;const rect=this.getBoundingClientRect();const scale=800/rect.width;const mx=(e.clientX-rect.left)*scale;
+  const{PL,cW,maxM,n,s,r,PT,H,PB}=chartData;if(mx<PL||mx>PL+cW){gid('tooltip').style.display='none';return}
+  const month=Math.round((mx-PL)/cW*maxM);const fb=(d,m)=>{const p=d.md.find(x=>x.m===m);return p?p.b:null};
+  const bn=fb(n,month),bs=fb(s,month),br=fb(r,month);const yr=Math.floor(month/12),mo=month%12;
+  let html='<b>'+yr+'年'+mo+'ヶ月目</b><br>';
+  if(bn!==null)html+='<span style="color:#a8a29e">繰上なし：</span>'+fym(bn)+'<br>';
+  if(bs!==null)html+='<span style="color:#7dd3fc">期間短縮：</span>'+fym(bs)+'<br>';
+  if(br!==null)html+='<span style="color:#6ee7b7">返済軽減：</span>'+fym(br);
+  const tt=gid('tooltip');tt.innerHTML=html;tt.style.display='block';
+  const box=gid('chart-box').getBoundingClientRect();
+  tt.style.left=Math.min(e.clientX-box.left+12,box.width-tt.offsetWidth-8)+'px';
+  tt.style.top=(e.clientY-box.top-tt.offsetHeight-8)+'px';
+  const hl=gid('hover-line');if(hl){hl.setAttribute('x1',mx);hl.setAttribute('x2',mx);hl.setAttribute('display','block')}
+});
+gid('chart').addEventListener('mouseleave',function(){gid('tooltip').style.display='none';const hl=gid('hover-line');if(hl)hl.setAttribute('display','none')});
+
+function updInvest(){
+  const ir=parseFloat(gid('investRate').value);gid('inv-rate-disp').textContent=ir.toFixed(1)+'%';
+  if(!lastR.pa)return;
+  const pa=lastR.pa,mo=lastR.mo,pm=lastR.pm;
+  // Fix②: use period from prepay timing to end
+  const yrs=Math.max(0,(mo-pm)/12);
+  const investGain=pa*Math.pow(1+ir/100,yrs)-pa;
+  const intSaved=Math.abs(lastR.sh.tI-lastR.none.tI);
+  const dedLost=Math.abs(lastR.sh.tD-lastR.none.tD);
+  const prepayNet=intSaved-dedLost;const investWins=investGain>prepayNet;
+  gid('inv-result').innerHTML=`
+    <div class="invest-card"><div><div class="ic-label">繰上返済の実質メリット</div><div style="font-size:11px;color:#78716c;margin-top:3px">利息削減 +${fy(intSaved)} ／ 控除減少 -${fy(dedLost)}</div></div><div class="ic-val ${prepayNet>0?'green':'red'}">${prepayNet>=0?'+':''}${fy(prepayNet)}</div></div>
+    <div class="invest-card ${investWins?'highlight':''}"><div><div class="ic-label">運用した場合の利益</div><div style="font-size:11px;color:#78716c;margin-top:3px">${ir.toFixed(1)}%×${yrs.toFixed(0)}年複利（税引前）</div></div><div class="ic-val green">+${fy(investGain)}</div></div>`;
+  let bep=0;if(prepayNet>0&&pa>0&&yrs>0){bep=(Math.pow((prepayNet+pa)/pa,1/yrs)-1)*100}
+  const bepEl=gid('inv-bep');
+  if(bep>0&&bep<20)bepEl.innerHTML='📊 損益分岐の運用利率：<b>年利 '+bep.toFixed(2)+'%</b><br><span style="font-size:12px;font-weight:400">これ以上の利率で運用できれば、繰り上げ返済より運用が有利</span>';
+  else if(prepayNet<=0)bepEl.innerHTML='📊 繰り上げ返済自体が実質マイナス（控除減少＞利息削減）のため、<b>運用の方が有利</b>';
+  else bepEl.innerHTML='📊 損益分岐の運用利率：<b>年利 '+bep.toFixed(2)+'%</b>';
+}
+
+function dedSec(t,deds){if(!deds||!deds.length)return'<div class="detail-section"><h3>'+t+'</h3><p style="font-size:12px;color:#a8a29e">控除対象期間なし</p></div>';let h='<div class="detail-section"><h3>'+t+'</h3><table class="ded-table"><thead><tr><th>年目</th><th class="r">年末残高</th><th class="r">控除率</th><th class="r">控除額</th></tr></thead><tbody>';let tot=0;deds.forEach(d=>{tot+=d.d;h+='<tr><td>'+d.y+'年目</td><td class="r">'+fy(d.b)+'</td><td class="r">'+d.rate+'%</td><td class="r hl">'+fy(d.d)+'</td></tr>'});h+='</tbody><tfoot><tr><td colspan="3">合計</td><td class="r" style="color:#92400e">'+fy(tot)+'</td></tr></tfoot></table></div>';return h}
+
+document.addEventListener('DOMContentLoaded',()=>{updBalDisp();updRemDisp();updTax()});
+</script>
+</body>
+</html>
