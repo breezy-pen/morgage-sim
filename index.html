@@ -118,6 +118,16 @@
   .footer p{font-size:11px;color:#78716c;line-height:1.7}.footer .copy{margin-top:6px;color:#a8a29e}
   .hidden{display:none}
   @media(max-width:700px){.input-grid{grid-template-columns:1fr}.invest-result{grid-template-columns:1fr!important}.invest-card{flex-direction:column;text-align:center;gap:6px}.quick-adjust{flex-direction:column;gap:10px}}
+  /* 上部帯 */
+  .loan-date-band{background:#fff;border-radius:14px;border:1px solid #fde68a;padding:14px 16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+  .loan-date-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-items:start}
+  .remain-auto{font-size:18px;font-weight:900;color:#b45309;margin-top:2px}
+  .remain-auto-sub{font-size:11px;color:#78716c}
+  .wareki-badge{display:inline-block;background:#fef3c7;color:#92400e;border-radius:5px;font-size:11px;font-weight:700;padding:1px 6px;margin-left:4px}
+  .same-month-row{margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .override-fields{display:flex;align-items:center;gap:6px;margin-top:6px;padding:8px 10px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a}
+  .preset-suggest{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;font-size:12px;color:#1e40af;line-height:1.6;margin-bottom:8px}
+  @media(max-width:700px){.loan-date-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -133,15 +143,61 @@
   <div class="privacy-wrap"><span class="privacy-badge">🔒 入力データは端末内のみで処理。外部送信・保存は一切されません</span></div>
   <!-- ===== INPUT ===== -->
   <div id="panel-input">
+    <!-- ===== 上部帯：借入・入居情報 ===== -->
+    <div class="loan-date-band">
+      <div class="section-title" style="margin-bottom:10px"><span class="section-num">📅</span>借入日・入居情報（返済回数と控除期間を自動計算）</div>
+      <div class="loan-date-grid">
+        <div class="field">
+          <label>借入年月</label>
+          <div class="field-row" style="gap:4px">
+            <select id="loanYear" onchange="onLoanDateChange()" style="padding:7px 6px;border:1px solid #d6d3d1;border-radius:8px;font-size:13px">
+              <option value="">年</option>
+              <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option><option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option><option value="2007">2007</option><option value="2006">2006</option><option value="2005">2005</option>
+            </select>
+            <select id="loanMonth" onchange="onLoanDateChange()" style="padding:7px 6px;border:1px solid #d6d3d1;border-radius:8px;font-size:13px">
+              <option value="">月</option>
+              <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+            </select>
+          </div>
+          <div class="note" id="loan-wareki-note"></div>
+        </div>
+        <div class="field">
+          <label>返済期間</label>
+          <div class="field-row"><input type="number" id="loanTermYears" value="35" step="1" min="1" max="50" style="width:65px" oninput="onLoanDateChange()"><span class="unit">年</span></div>
+        </div>
+        <div class="field">
+          <label>残りの返済回数</label>
+          <div class="remain-auto" id="remain-auto-disp">—</div>
+          <div class="remain-auto-sub" id="remain-auto-sub"></div>
+        </div>
+      </div>
+      <div class="same-month-row">
+        <label class="checkbox-label" style="margin-bottom:0"><input type="checkbox" id="sameMonthCheck" checked onchange="onSameMonthToggle()"><span style="font-size:12px">居住開始も同月とみなす</span></label>
+        <span id="same-month-label" style="font-size:12px;color:#92400e;font-weight:700"></span>
+      </div>
+      <div id="override-row" style="display:none">
+        <div class="override-fields">
+          <span style="font-size:11px;color:#78716c">居住開始年月：</span>
+          <select id="moveInYearOvr" onchange="onOverrideChange()" style="padding:6px;border:1px solid #d6d3d1;border-radius:8px;font-size:13px">
+            <option value="">年</option>
+            <option value="2026">2026</option><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option><option value="2019">2019</option><option value="2018">2018</option><option value="2017">2017</option><option value="2016">2016</option><option value="2015">2015</option><option value="2014">2014</option><option value="2013">2013</option><option value="2012">2012</option><option value="2011">2011</option><option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option><option value="2007">2007</option><option value="2006">2006</option><option value="2005">2005</option>
+          </select>
+          <select id="moveInMonthOvr" onchange="onOverrideChange()" style="padding:6px;border:1px solid #d6d3d1;border-radius:8px;font-size:13px">
+            <option value="">月</option>
+            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+          </select>
+          <span id="override-wareki" style="font-size:11px;color:#92400e;font-weight:700"></span>
+        </div>
+      </div>
+    </div>
+    <!-- ===== 2列グリッド ===== -->
     <div class="input-grid">
       <!-- Col1 Row1: ローン基本 -->
       <div class="section">
         <div class="section-title"><span class="section-num">1</span>ローン基本条件</div>
         <div class="field"><label>現在の借入残高</label><div class="field-row"><input type="number" id="balance" value="3000" step="1" min="0" style="width:120px" oninput="updBalDisp()"><span class="unit">万円</span></div><div class="note" id="bal-disp">＝30,000,000円</div></div>
-        <div class="grid-2">
-          <div class="field"><label>金利（年利）</label><div class="field-row"><input type="number" id="rate" value="1.0" step="0.025" min="0.1" max="10" style="width:80px"><span class="unit">%</span></div></div>
-          <div class="field"><label>残りの返済回数</label><div class="field-row"><input type="number" id="remainMonths" value="420" step="1" min="1" max="420" style="width:80px" oninput="updRemDisp()"><span class="unit">回</span></div><div class="note" id="rem-disp"></div></div>
-        </div>
+        <div class="field"><label>金利（年利）</label><div class="field-row"><input type="number" id="rate" value="1.0" step="0.025" min="0.1" max="10" style="width:80px"><span class="unit">%</span></div></div>
+        <div class="field"><label>残りの返済回数 <span style="font-size:10px;color:#a8a29e">（自動計算）</span></label><div class="field-row"><input type="number" id="remainMonths" value="" readonly style="width:80px;background:#f5f5f4;color:#57534e;cursor:default" placeholder="—"><span class="unit">回</span></div><div class="note" id="rem-disp"></div></div>
       </div>
       <!-- Col2 Row1: 繰上返済 -->
       <div class="section">
@@ -156,6 +212,7 @@
       <!-- Col1 Row2: 控除 -->
       <div class="section">
         <div class="section-title"><span class="section-num">3</span>住宅ローン控除</div>
+        <div id="preset-suggest-box"></div>
         <div class="field"><label>入居年・住宅タイプ</label>
           <select id="preset" onchange="applyPreset()">
             <option value="">-- 選んでください --</option>
@@ -173,17 +230,14 @@
           <div class="grid-2"><div class="field"><label>後半控除率</label><div class="field-row"><input type="number" id="dedRate2" value="0" step="0.1" min="0" max="1" style="width:60px"><span class="unit">%</span></div></div><div class="field"><label>後半年数</label><div class="field-row"><input type="number" id="dedYears2" value="0" step="1" min="0" max="5" style="width:60px"><span class="unit">年</span></div></div></div>
           <div class="field"><label>年間控除上限額</label><div class="field-row"><input type="number" id="dedCap" value="21" step="0.5" min="0" style="width:70px"><span class="unit">万円</span></div></div>
         </div>
-        <div class="field" style="margin-top:8px"><label>居住開始年月</label><div class="field-row">
-          <select id="moveInYear" style="width:90px;padding:7px 8px;border:1px solid #d6d3d1;border-radius:8px;font-size:13px" onchange="calcDedRem()">
-            <option value="">年</option>
-            <option value="2015">2015年</option><option value="2016">2016年</option><option value="2017">2017年</option><option value="2018">2018年</option><option value="2019">2019年</option><option value="2020">2020年</option><option value="2021">2021年</option><option value="2022">2022年</option><option value="2023">2023年</option><option value="2024">2024年</option><option value="2025">2025年</option><option value="2026">2026年</option>
-          </select>
-          <select id="moveInMonth" style="width:70px;padding:7px 8px;border:1px solid #d6d3d1;border-radius:8px;font-size:13px" onchange="calcDedRem()">
-            <option value="">月</option>
-            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option><option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option><option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
-          </select>
-        </div></div>
-        <div class="field"><label>控除の残り年数</label><div class="field-row"><input type="number" id="dedRemaining" value="0" step="1" min="0" max="15" style="width:60px"><span class="unit">年</span></div><div class="note" id="ded-rem-note"></div></div>
+        <!-- 居住開始年月・控除残り年数は上部帯から自動連動（hidden） -->
+        <input type="hidden" id="moveInYear" value="">
+        <input type="hidden" id="moveInMonth" value="">
+        <div class="field" style="margin-top:8px">
+          <label>控除の残り年数（自動計算）</label>
+          <div class="field-row"><input type="number" id="dedRemaining" value="0" step="1" min="0" max="15" style="width:60px"><span class="unit">年</span></div>
+          <div class="note" id="ded-rem-note">入居年月を上部で入力すると自動計算されます</div>
+        </div>
       </div>
       <!-- Col2 Row2: 年収 -->
       <div class="section">
@@ -265,6 +319,108 @@
   </div>
 </div>
 <script>
+// ===== 和暦変換 =====
+function toWareki(year, month) {
+  const y = parseInt(year), m = parseInt(month) || 1;
+  if (!y) return '';
+  if (y > 2019 || (y === 2019 && m >= 5)) return 'R' + (y - 2018) + '年';
+  if (y > 1989 || (y === 1989 && m >= 1)) return 'H' + (y - 1988) + '年';
+  return '';
+}
+
+// ===== 年プルダウンに和暦を一括追記 =====
+function initYearSelects() {
+  const ids = ['loanYear', 'moveInYearOvr'];
+  ids.forEach(id => {
+    const sel = gid(id);
+    if (!sel) return;
+    Array.from(sel.options).forEach(opt => {
+      if (!opt.value) return;
+      const y = parseInt(opt.value);
+      // 2019はReiwa開始年としてR1表示
+      const wy = y >= 2019 ? 'R' + (y - 2018) : (y >= 1989 ? 'H' + (y - 1988) : '');
+      if (wy) opt.text = y + '（' + wy + '）年';
+    });
+  });
+}
+
+// ===== 上部帯：借入日変更 =====
+function onLoanDateChange() {
+  const yr = parseInt(gid('loanYear').value);
+  const mn = parseInt(gid('loanMonth').value) || 1;
+  const term = parseInt(gid('loanTermYears').value) || 35;
+  if (!yr) {
+    gid('remain-auto-disp').textContent = '—';
+    gid('remainMonths').value = '';
+    gid('rem-disp').textContent = '';
+    return;
+  }
+
+  const now = new Date();
+  const elapsed = (now.getFullYear() - yr) * 12 + (now.getMonth() + 1 - mn);
+  const remain = Math.max(1, term * 12 - elapsed);
+  gid('remainMonths').value = remain;
+
+  const wy = toWareki(yr, mn);
+  gid('remain-auto-disp').textContent = remain + '回';
+  const remY = Math.floor(remain / 12), remM = remain % 12;
+  gid('remain-auto-sub').textContent = '（残り' + remY + '年' + remM + 'ヶ月）';
+  gid('rem-disp').textContent = remY + '年' + remM + 'ヶ月';
+  gid('loan-wareki-note').innerHTML = wy ? '<span class="wareki-badge">' + wy + '</span> 借入' : '';
+
+  if (gid('sameMonthCheck').checked) {
+    gid('moveInYear').value = yr;
+    gid('moveInMonth').value = mn;
+    const wyLabel = toWareki(yr, mn);
+    gid('same-month-label').innerHTML = yr + '年' + mn + '月入居 <span class="wareki-badge">' + (wyLabel || '') + '</span>';
+    calcDedRem();
+    updatePresetSuggest(yr, mn);
+  }
+}
+
+function onSameMonthToggle() {
+  const same = gid('sameMonthCheck').checked;
+  gid('override-row').style.display = same ? 'none' : 'block';
+  if (same) {
+    onLoanDateChange();
+  } else {
+    gid('same-month-label').textContent = '';
+    onOverrideChange();
+  }
+}
+
+function onOverrideChange() {
+  const yr = parseInt(gid('moveInYearOvr').value);
+  const mn = parseInt(gid('moveInMonthOvr').value) || 1;
+  if (!yr) return;
+  gid('moveInYear').value = yr;
+  gid('moveInMonth').value = mn;
+  const wy = toWareki(yr, mn);
+  gid('override-wareki').innerHTML = wy ? '<span class="wareki-badge">' + wy + '</span>' : '';
+  calcDedRem();
+  updatePresetSuggest(yr, mn);
+}
+
+function updatePresetSuggest(year, month) {
+  const box = gid('preset-suggest-box');
+  if (!box || !year) return;
+  const m = parseInt(month) || 1;
+  const wy = toWareki(year, m);
+  let label = '', note = '';
+  if (year <= 2021) {
+    label = '〜2021年入居（旧制度：控除率1%）';
+  } else if (year <= 2023) {
+    label = '2022〜2023年入居（控除率0.7%）';
+  } else if (year <= 2025) {
+    label = '2024〜2025年入居（控除率0.7%）';
+  }
+  if (label) {
+    box.innerHTML = '<div class="preset-suggest">📅 ' + year + '年' + m + '月入居 <span class="wareki-badge">' + (wy||'') + m + '月</span> → <b>「' + label + '」</b>が該当する見込みです。<br><span style="font-size:10px;color:#78716c">※ 別の制度を使っている場合はそちらを選択してください</span></div>';
+  } else {
+    box.innerHTML = '';
+  }
+}
+
 // ===== Presets (with residential tax cap: old=136500, new=97500) =====
 const PRESETS={
   no_deduction:{r1:0,y1:0,r2:0,y2:0,cap:0,ty:0,rtc:0,note:'住宅ローン控除なし'},
@@ -294,7 +450,7 @@ function syncPPinp(v){gid('ppSlider').value=Math.min(500,v);gid('pp-disp').textC
 function calcDedRem(){const yr=gid('moveInYear').value,mn=gid('moveInMonth').value;if(!yr)return;const s=gid('preset').value;const ty=PRESETS[s]?PRESETS[s].ty:(nv('dedYears1')+nv('dedYears2'));const miY=parseInt(yr),miM=parseInt(mn)||1;const now=new Date();const used=now.getFullYear()-miY-(now.getMonth()+1<miM?1:0);const rem=Math.max(0,ty-used);gid('dedRemaining').value=rem;gid('ded-rem-note').textContent='入居から約'+used+'年経過 → 残り'+rem+'年'}
 function stepV(id,d){const e=gid(id);e.value=Math.max(0,Math.min(10,(parseInt(e.value)||0)+d));updTax()}
 function switchTab(n){['input','result'].forEach(t=>{gid('panel-'+t).classList.toggle('hidden',t!==n);gid('tab-'+t).classList.toggle('active',t===n)});window.scrollTo({top:0,behavior:'smooth'})}
-function runAndShow(){runSim();switchTab('result')}
+function runAndShow(){if(runSim()!==false)switchTab('result')}
 function togOpt(id){gid(id).classList.toggle('open')}
 gid('useRC').addEventListener('change',function(){gid('rc-fields').classList.toggle('hidden',!this.checked)});
 function toggleAcc(b){const bd=b.nextElementSibling;bd.classList.toggle('open');b.querySelector('span').textContent=bd.classList.contains('open')?'▲':'▼'}
@@ -324,7 +480,12 @@ function updTax(){gid('est-tax').textContent=fy(estimateTax(nv('grossIncome')*1e
 
 let lastR={};
 function runSim(){
-  const b=nv('balance')*1e4,r=nv('rate'),mo=nv('remainMonths'),pa=nv('prepayAmount')*1e4,pm=nv('prepayTiming');
+  const mo=nv('remainMonths');
+  if (!mo || mo <= 0) {
+    alert('借入年月と返済期間を入力してください。\n（上部の「借入日・入居情報」欄）');
+    return false;
+  }
+  const b=nv('balance')*1e4,r=nv('rate'),pa=nv('prepayAmount')*1e4,pm=nv('prepayTiming');
   const dr1=nv('dedRate1'),dy1=nv('dedYears1'),dr2=nv('dedRate2'),dy2=nv('dedYears2'),cap=nv('dedCap')*1e4,drem=nv('dedRemaining');
   const tax=estimateTax(nv('grossIncome')*1e4,nv('socialIns')*1e4,parseInt(gid('dep').value)||0);
   const rtc=getResidentTaxCap();
@@ -364,7 +525,7 @@ function runSim(){
   <tr><th>控除合計</th><td class="col-none">${fy(dn.tD)}</td><td class="col-shorten">${fy(ds.tD)}${ds_(dD_s,false)}</td><td class="col-reduce">${fy(dr.tD)}${ds_(dD_r,false)}</td></tr>
   <tr class="highlight-row"><th>実質負担額</th><td class="col-none">${fy(dn.net)}</td><td class="col-shorten">${fy(ds.net)}${ds_(dN_s,true)}</td><td class="col-reduce">${fy(dr.net)}${ds_(dN_r,true)}</td></tr>
   <tr><th>返済期間</th><td class="col-none">${fm_(dn.am)}</td><td class="col-shorten">${fm_(ds.am)}${dm_(dM_s)}</td><td class="col-reduce">${fm_(dr.am)}${dm_(dM_r)}</td></tr>
-  <tr><th>最終的な<br>毎月返済額</th><td class="col-none">${fy(dn.nmp)}${dn.nmp!==dn.mp?'<br><span style="font-size:10px;color:#78716c">(当初 '+fy(dn.mp)+')</span>':''}</td><td class="col-shorten">${fy(ds.nmp)}${ds.nmp!==dn.nmp?ds_(ds.nmp-dn.nmp,true):''}</td><td class="col-reduce">${fy(dr.nmp)}${dr.nmp!==dn.nmp?ds_(dr.nmp-dn.nmp,true):''}</td></tr></tbody>`;
+  <tr><th>毎月の返済額</th><td class="col-none">${fy(dn.nmp)}${dn.nmp!==dn.mp?ds_(dn.nmp-dn.mp,true):''}</td><td class="col-shorten">${fy(ds.nmp)}${ds.nmp!==ds.mp?ds_(ds.nmp-ds.mp,true):''}</td><td class="col-reduce">${fy(dr.nmp)}${dr.nmp!==dr.mp?ds_(dr.nmp-dr.mp,true):''}</td></tr></tbody>`;
   renderChart(none,sh,rd);
   gid('det-body').innerHTML=dedSec('繰り上げなし',none.deds)+dedSec('期間短縮型',sh.deds)+dedSec('返済額軽減型',rd.deds);
   updInvest();
@@ -426,7 +587,7 @@ function updInvest(){
 
 function dedSec(t,deds){if(!deds||!deds.length)return'<div class="detail-section"><h3>'+t+'</h3><p style="font-size:12px;color:#a8a29e">控除対象期間なし</p></div>';let h='<div class="detail-section"><h3>'+t+'</h3><table class="ded-table"><thead><tr><th>年目</th><th class="r">年末残高</th><th class="r">控除率</th><th class="r">控除額</th></tr></thead><tbody>';let tot=0;deds.forEach(d=>{tot+=d.d;h+='<tr><td>'+d.y+'年目</td><td class="r">'+fy(d.b)+'</td><td class="r">'+d.rate+'%</td><td class="r hl">'+fy(d.d)+'</td></tr>'});h+='</tbody><tfoot><tr><td colspan="3">合計</td><td class="r" style="color:#92400e">'+fy(tot)+'</td></tr></tfoot></table></div>';return h}
 
-document.addEventListener('DOMContentLoaded',()=>{updBalDisp();updRemDisp();updTax()});
+document.addEventListener('DOMContentLoaded',()=>{initYearSelects();updBalDisp();updTax()});
 </script>
 </body>
 </html>
